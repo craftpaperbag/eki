@@ -1,0 +1,37 @@
+[
+  {
+    "name": "東京",
+    "line": "東海道本線",
+    "latitude": 35.681236,
+    "longitude": 139.767125,
+    "lineColor": "#00a1e9"
+  },
+  {
+    "name": "新宿",
+    "line": "山手線",
+    "latitude": 35.690921,
+    "longitude": 139.700258,
+    "lineColor": "#9acd32"
+  },
+  {
+    "name": "品川",
+    "line": "京急本線",
+    "latitude": 35.628471,
+    "longitude": 139.73876,
+    "lineColor": "#e60026"
+  },
+  {
+    "name": "横浜",
+    "line": "根岸線",
+    "latitude": 35.465833,
+    "longitude": 139.6225,
+    "lineColor": "#00b0f0"
+  },
+  {
+    "name": "大宮",
+    "line": "東北本線",
+    "latitude": 35.906408,
+    "longitude": 139.624949,
+    "lineColor": "#ff7f00"
+  }
+]
