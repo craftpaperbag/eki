@@ -91,7 +91,10 @@ export default function HomePage() {
 
   useEffect(() => {
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (typeof event.alpha === 'number') {
+      const webkitHeading = (event as DeviceOrientationEvent & { webkitCompassHeading?: number }).webkitCompassHeading;
+      if (typeof webkitHeading === 'number') {
+        setHeading(360 - webkitHeading);
+      } else if (typeof event.alpha === 'number') {
         setHeading(event.alpha);
       }
     };
@@ -135,8 +138,18 @@ export default function HomePage() {
     }
     return null;
   }, [baseBearing, heading]);
-  const displayAngle = baseBearing !== null ? (relativeHeading ?? baseBearing) : null;
-  const displayDirection = displayAngle !== null ? toDirectionName(displayAngle) : null;
+  const [compassAngle, setCompassAngle] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (baseBearing === null) {
+      setCompassAngle(null);
+      return;
+    }
+    setCompassAngle(relativeHeading ?? baseBearing);
+  }, [baseBearing, relativeHeading]);
+
+  const displayAngle = compassAngle;
+  const displayDirection = compassAngle !== null ? toDirectionName(compassAngle) : null;
   const baseDirection = baseBearing !== null ? toDirectionName(baseBearing) : null;
 
   const filteredStations = useMemo(() => {
@@ -154,60 +167,58 @@ export default function HomePage() {
   };
 
   return (
-    <main className="mx-auto flex h-full max-w-5xl flex-col gap-6 px-6 py-6">
-      <header className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-slate-300">最寄駅コンパス</p>
-          <h1 className="text-3xl font-bold">駅コンパス</h1>
+    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-5 px-4 py-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <p className="text-xs text-slate-300">最寄駅コンパス</p>
+          <h1 className="text-2xl font-bold leading-tight">駅コンパス</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => setAboutOpen(true)}
-          className="rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 shadow hover:bg-slate-700"
-        >
-          このアプリについて
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full bg-slate-900/70 p-1 shadow-inner shadow-black/20">
+            <button
+              type="button"
+              onClick={() => setMode('nearest')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                mode === 'nearest'
+                  ? 'bg-white text-slate-900 shadow'
+                  : 'text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              最寄駅モード
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('other')}
+              className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
+                mode === 'other'
+                  ? 'bg-white text-slate-900 shadow'
+                  : 'text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              他の駅モード
+            </button>
+          </div>
+          {mode === 'other' && (
+            <button
+              type="button"
+              onClick={resetToNearest}
+              className="rounded-full border border-white/10 bg-slate-900/70 px-3 py-2 text-xs font-semibold text-slate-200 transition hover:border-white/30"
+            >
+              最寄駅に戻る
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setAboutOpen(true)}
+            className="rounded-full bg-slate-800 px-4 py-2 text-sm font-medium text-slate-100 shadow hover:bg-slate-700"
+          >
+            このアプリについて
+          </button>
+        </div>
       </header>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex rounded-full bg-slate-900/70 p-1 shadow-inner shadow-black/20">
-          <button
-            type="button"
-            onClick={() => setMode('nearest')}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              mode === 'nearest'
-                ? 'bg-white text-slate-900 shadow'
-                : 'text-slate-200 hover:bg-slate-800'
-            }`}
-          >
-            最寄駅モード
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('other')}
-            className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-              mode === 'other'
-                ? 'bg-white text-slate-900 shadow'
-                : 'text-slate-200 hover:bg-slate-800'
-            }`}
-          >
-            他の駅モード
-          </button>
-        </div>
-        {mode === 'other' && (
-          <button
-            type="button"
-            onClick={resetToNearest}
-            className="rounded-full border border-white/10 bg-slate-900/70 px-4 py-2 text-sm text-slate-200 transition hover:border-white/30"
-          >
-            最寄駅に戻る
-          </button>
-        )}
-        <p className="text-xs text-slate-400">ページは画面の縦幅いっぱいで表示されます。</p>
-      </div>
-
-      <div className="grid flex-1 grid-cols-1 gap-4 md:grid-cols-2">
-        <section className="flex h-full flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 shadow-xl">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <section className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 shadow-xl">
           {error && <p className="text-sm text-amber-300">{error}</p>}
           {!error && !position && (
             <p className="text-sm text-slate-300">位置情報を取得しています...</p>
@@ -288,7 +299,7 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="flex h-full flex-col gap-4 rounded-3xl border border-white/5 bg-slate-900/70 p-5 text-sm text-slate-200">
+        <section className="flex flex-col gap-4 rounded-3xl border border-white/5 bg-slate-900/70 p-5 text-sm text-slate-200">
           {mode === 'nearest' ? (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2">
@@ -300,9 +311,6 @@ export default function HomePage() {
                 <li>表示される最寄駅が、現在地に合わせて自動で更新されます。</li>
                 <li>距離が1km未満ならメートル、1km以上ならキロメートルで表示されます。</li>
               </ol>
-              <p className="text-xs text-slate-400">
-                画面の高さに合わせて配置しています。スクロールは必要ありません。
-              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
