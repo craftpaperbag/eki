@@ -74,6 +74,9 @@ export default function HomePage() {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        if (typeof pos.coords.heading === 'number' && !Number.isNaN(pos.coords.heading)) {
+          setHeading(pos.coords.heading);
+        }
         setError(null);
       },
       () => {
